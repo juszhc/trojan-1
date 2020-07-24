@@ -3,9 +3,6 @@
 blue(){
     echo -e "\033[34m\033[01m$1\033[0m"
 }
-green(){
-    echo -e "\033[32m\033[01m$1\033[0m"
-}
 red(){
     echo -e "\033[31m\033[01m$1\033[0m"
 }
@@ -44,16 +41,16 @@ if [ "$CHECK" == "SELINUX=permissive" ]; then
     setenforce 0
 fi
 yum -y install bind-utils wget unzip zip curl tar
-green "======================="
+blue "======================="
 yellow "请输入绑定到本VPS的域名"
-green "======================="
+blue "======================="
 read your_domain
 real_addr=`ping ${your_domain} -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
 local_addr=`curl ipv4.icanhazip.com`
 if [ $real_addr == $local_addr ] ; then
-	green "=========================================="
-	green "域名解析正常，开启安装nginx并申请https证书"
-	green "=========================================="
+	blue "=========================================="
+	blue "域名解析正常，开启安装nginx并申请https证书"
+	blue "=========================================="
 	sleep 0.1s
 	rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
     	yum install -y nginx
@@ -185,14 +182,14 @@ EOF
 	chmod +x /usr/lib/systemd/system/trojan.service
 	systemctl start trojan.service
 	systemctl enable trojan.service
-	green "======================================================================"
-	green "Trojan已安装完成，请使用以下链接下载trojan客户端，此客户端已配置好所有参数"
-	green "1、复制下面的链接，在浏览器打开，下载客户端"
-	blue "http://${your_domain}/$trojan_path/trojan-cli.zip"
-	green "2、将下载的压缩包解压，打开文件夹，打开start.bat即打开并运行Trojan客户端"
-	green "3、打开stop.bat即关闭Trojan客户端"
-	green "4、Trojan客户端需要搭配浏览器插件使用，例如switchyomega等"
-	green "======================================================================"
+	blue "======================================================================"
+	blue "Trojan已安装完成，请使用以下链接下载trojan客户端，此客户端已配置好所有参数"
+	blue "1、复制下面的链接，在浏览器打开，下载客户端"
+	red "http://${your_domain}/$trojan_path/trojan-cli.zip"
+	blue "2、将下载的压缩包解压，打开文件夹，打开start.bat即打开并运行Trojan客户端"
+	blue "3、打开stop.bat即关闭Trojan客户端"
+	blue "4、Trojan客户端需要搭配浏览器插件使用，例如switchyomega等"
+	blue "======================================================================"
 	else
         red "================================"
 	red "https证书没有申请成果，本次安装失败"
@@ -218,21 +215,21 @@ function remove_trojan(){
     yum remove -y nginx
     rm -rf /usr/src/trojan*
     rm -rf /www/html/*
-    green "=============="
-    green "trojan删除完毕"
-    green "=============="
+    blue "=============="
+    blue "trojan删除完毕"
+    blue "=============="
 }
 start_menu(){
     clear
-    green " ===================================="
-    green " 介绍：一键安装trojan      "
-    green " 系统：>=centos7                       "
-    green " 作者：z                      "
-    green " 网站：z            "
-    green " z                  "
-    green " ===================================="
+    blue " ===================================="
+    blue " 介绍：一键安装trojan      "
+    blue " 系统：>=centos7                       "
+    blue " 作者：z                      "
+    blue " 网站：z            "
+    blue " z                  "
+    blue " ===================================="
     echo
-    green " 1. 安装trojan"
+    blue " 1. 安装trojan"
     red " 2. 卸载trojan"
     yellow " 0. 退出脚本"
     echo
