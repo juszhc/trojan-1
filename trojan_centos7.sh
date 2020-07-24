@@ -89,7 +89,7 @@ if [ $real_addr == $local_addr ] ; then
     "remote_addr": "$your_domain",
     "remote_port": 443,
     "password": [
-        "jan137ximala"
+        "trojanx17953."
     ],
     "log_level": 1,
     "ssl": {
@@ -123,7 +123,7 @@ EOF
     "remote_addr": "127.0.0.1",
     "remote_port": 80,
     "password": [
-        "jan137ximala"
+        "trojanx17953."
     ],
     "log_level": 1,
     "ssl": {
@@ -189,6 +189,7 @@ EOF
 	blue "Trojan已安装完成，请使用以下链接下载trojan客户端，此客户端已配置好所有参数"
 	blue "1、复制下面的链接，在浏览器打开，下载客户端"
 	red "http://${your_domain}/$trojan_path/trojan-cli.zip"
+	red "pwd:trojanx17953."
 	blue "2、将下载的压缩包解压，打开文件夹，打开start.bat即打开并运行Trojan客户端"
 	blue "3、打开stop.bat即关闭Trojan客户端"
 	blue "4、Trojan客户端需要搭配浏览器插件使用，例如switchyomega等"
