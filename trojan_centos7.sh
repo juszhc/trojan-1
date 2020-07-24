@@ -35,6 +35,7 @@ fi
 function install_trojan(){
 systemctl stop firewalld
 systemctl disable firewalld
+CHECK=$(grep SELINUX= /etc/selinux/config | grep -v "#")
 if [ "$CHECK" == "SELINUX=enforcing" ]; then
     sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
     setenforce 0
@@ -48,39 +49,45 @@ green "======================="
 yellow "请输入绑定到本VPS的域名"
 green "======================="
 read your_domain
+
 real_addr=`ping ${your_domain} -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
 local_addr=`curl ipv4.icanhazip.com`
 if [ $real_addr == $local_addr ] ; then
 	green "=========================================="
 	green "域名解析正常，开启安装nginx并申请https证书"
 	green "=========================================="
-	sleep 0.1s
+	sleep 1s
+	green "======================="
+	yellow "请输入密码"
+	green "======================="
+	read your_pwd
 	rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
     	yum install -y nginx
 	systemctl enable nginx.service
 	#设置伪装站
-	rm -rf /www/html/*
-	cd /www/html/
+	rm -rf /usr/share/nginx/html/*
+	cd /usr/share/nginx/html/
 	wget https://github.com/juszhc/website/blob/master/website.zip
     	unzip web.zip
-	systemctl start nginx.service
+	systemctl restart nginx.service
 	#申请https证书
 	mkdir /usr/src/trojan-cert
 	curl https://get.acme.sh | sh
-	~/.acme.sh/acme.sh  --issue  -d $your_domain  --webroot /www/html/
+	~/.acme.sh/acme.sh  --issue  -d $your_domain  --webroot /usr/share/nginx/html/
     	~/.acme.sh/acme.sh  --installcert  -d  $your_domain   \
         --key-file   /usr/src/trojan-cert/private.key \
         --fullchain-file /usr/src/trojan-cert/fullchain.cer \
         --reloadcmd  "systemctl force-reload  nginx.service"
 	if test -s /usr/src/trojan-cert/fullchain.cer; then
         cd /usr/src
-	wget https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.13.0-linux-amd64.tar.xz
+	#wget https://github.com/trojan-gfw/trojan/releases/download/v1.13.0/trojan-1.13.0-linux-amd64.tar.xz
+	wget https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.14.0-linux-amd64.tar.xz
 	tar xf trojan-1.*
 	#下载trojan客户端
-	wget https://github.com/juszhc/trojan-1/raw/master/trojan-cli.zip
+	wget https://github.com/atrandys/trojan/raw/master/trojan-cli.zip
 	unzip trojan-cli.zip
 	cp /usr/src/trojan-cert/fullchain.cer /usr/src/trojan-cli/fullchain.cer
-	
+	trojan_passwd=${your_pwd}
 	cat > /usr/src/trojan-cli/config.json <<-EOF
 {
     "run_type": "client",
@@ -89,15 +96,15 @@ if [ $real_addr == $local_addr ] ; then
     "remote_addr": "$your_domain",
     "remote_port": 443,
     "password": [
-        "jan137ximala"
+        "$trojan_passwd"
     ],
     "log_level": 1,
     "ssl": {
         "verify": true,
         "verify_hostname": true,
         "cert": "fullchain.cer",
-        "cipher": "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:RSA-AES128-GCM-SHA256:RSA-AES256-GCM-SHA384:RSA-AES128-SHA:RSA-AES256-SHA:RSA-3DES-EDE-SHA",
-        "sni": "",
+        "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
+	"sni": "",
         "alpn": [
             "h2",
             "http/1.1"
@@ -123,15 +130,15 @@ EOF
     "remote_addr": "127.0.0.1",
     "remote_port": 80,
     "password": [
-        "jan137ximala"
+        "$trojan_passwd"
     ],
     "log_level": 1,
     "ssl": {
         "cert": "/usr/src/trojan-cert/fullchain.cer",
         "key": "/usr/src/trojan-cert/private.key",
         "key_password": "",
-        "cipher": "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256",
-        "prefer_server_cipher": true,
+        "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
+	"prefer_server_cipher": true,
         "alpn": [
             "http/1.1"
         ],
@@ -160,9 +167,9 @@ EOF
 EOF
 	cd /usr/src/trojan-cli/
 	zip -q -r trojan-cli.zip /usr/src/trojan-cli/
-	trojan_path=$(trojanClient)
-	mkdir /www/html/${trojan_path}
-	mv /usr/src/trojan-cli/trojan-cli.zip /www/html/${trojan_path}/
+	trojan_path=$(cat /dev/urandom | head -1 | md5sum | head -c 16)
+	mkdir /usr/share/nginx/html/${trojan_path}
+	mv /usr/src/trojan-cli/trojan-cli.zip /usr/share/nginx/html/${trojan_path}/
 	#增加启动脚本
 	
 	cat > /usr/lib/systemd/system/trojan.service <<-EOF
@@ -217,7 +224,7 @@ function remove_trojan(){
     rm -f /usr/lib/systemd/system/trojan.service
     yum remove -y nginx
     rm -rf /usr/src/trojan*
-    rm -rf /www/html/*
+    rm -rf /usr/share/nginx/html/*
     green "=============="
     green "trojan删除完毕"
     green "=============="
@@ -227,9 +234,7 @@ start_menu(){
     green " ===================================="
     green " 介绍：一键安装trojan      "
     green " 系统：>=centos7                       "
-    green " 作者：z                      "
-    green " 网站：z            "
-    green " z                  "
+    green " 作者：A                      "
     green " ===================================="
     echo
     green " 1. 安装trojan"
