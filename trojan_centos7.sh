@@ -54,33 +54,33 @@ if [ $real_addr == $local_addr ] ; then
 	green "=========================================="
 	green "域名解析正常，开启安装nginx并申请https证书"
 	green "=========================================="
-	sleep 1s
+	sleep 0.1s
 	rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
     	yum install -y nginx
 	systemctl enable nginx.service
 	#设置伪装站
-	rm -rf /usr/share/nginx/html/*
-	cd /usr/share/nginx/html/
-	wget https://github.com/atrandys/v2ray-ws-tls/raw/master/web.zip
+	rm -rf /www/html/*
+	cd /www/html/
+	wget https://github.com/juszhc/website/blob/master/website.zip
     	unzip web.zip
 	systemctl start nginx.service
 	#申请https证书
 	mkdir /usr/src/trojan-cert
 	curl https://get.acme.sh | sh
-	~/.acme.sh/acme.sh  --issue  -d $your_domain  --webroot /usr/share/nginx/html/
+	~/.acme.sh/acme.sh  --issue  -d $your_domain  --webroot /www/html/
     	~/.acme.sh/acme.sh  --installcert  -d  $your_domain   \
         --key-file   /usr/src/trojan-cert/private.key \
         --fullchain-file /usr/src/trojan-cert/fullchain.cer \
         --reloadcmd  "systemctl force-reload  nginx.service"
 	if test -s /usr/src/trojan-cert/fullchain.cer; then
         cd /usr/src
-	wget https://github.com/trojan-gfw/trojan/releases/download/v1.13.0/trojan-1.13.0-linux-amd64.tar.xz
+	wget https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.13.0-linux-amd64.tar.xz
 	tar xf trojan-1.*
 	#下载trojan客户端
 	wget https://github.com/atrandys/trojan/raw/master/trojan-cli.zip
 	unzip trojan-cli.zip
 	cp /usr/src/trojan-cert/fullchain.cer /usr/src/trojan-cli/fullchain.cer
-	trojan_passwd=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
+	
 	cat > /usr/src/trojan-cli/config.json <<-EOF
 {
     "run_type": "client",
@@ -89,7 +89,7 @@ if [ $real_addr == $local_addr ] ; then
     "remote_addr": "$your_domain",
     "remote_port": 443,
     "password": [
-        "$trojan_passwd"
+        "jan137ximala"
     ],
     "log_level": 1,
     "ssl": {
@@ -123,7 +123,7 @@ EOF
     "remote_addr": "127.0.0.1",
     "remote_port": 80,
     "password": [
-        "$trojan_passwd"
+        "jan137ximala"
     ],
     "log_level": 1,
     "ssl": {
@@ -160,9 +160,9 @@ EOF
 EOF
 	cd /usr/src/trojan-cli/
 	zip -q -r trojan-cli.zip /usr/src/trojan-cli/
-	trojan_path=$(cat /dev/urandom | head -1 | md5sum | head -c 16)
-	mkdir /usr/share/nginx/html/${trojan_path}
-	mv /usr/src/trojan-cli/trojan-cli.zip /usr/share/nginx/html/${trojan_path}/
+	trojan_path=$(trojanClient)
+	mkdir /www/html/${trojan_path}
+	mv /usr/src/trojan-cli/trojan-cli.zip /www/html/${trojan_path}/
 	#增加启动脚本
 	
 	cat > /usr/lib/systemd/system/trojan.service <<-EOF
@@ -217,7 +217,7 @@ function remove_trojan(){
     rm -f /usr/lib/systemd/system/trojan.service
     yum remove -y nginx
     rm -rf /usr/src/trojan*
-    rm -rf /usr/share/nginx/html/*
+    rm -rf /www/html/*
     green "=============="
     green "trojan删除完毕"
     green "=============="
@@ -227,9 +227,9 @@ start_menu(){
     green " ===================================="
     green " 介绍：一键安装trojan      "
     green " 系统：>=centos7                       "
-    green " 作者：atrandys                      "
-    green " 网站：www.atrandys.com              "
-    green " Youtube：atrandys                   "
+    green " 作者：z                      "
+    green " 网站：z            "
+    green " z                  "
     green " ===================================="
     echo
     green " 1. 安装trojan"
